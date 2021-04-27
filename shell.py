@@ -1,4 +1,10 @@
+import litpy
 
 while True:
-    text = input('mltpy > ')
-    print(text)
+    text = input('litpy > ')
+    result, error = litpy.run('<stdin>', text)
+
+    if error:
+        print(error.as_string())
+    else:
+        print(result)
