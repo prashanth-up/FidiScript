@@ -1,7 +1,13 @@
-expr : term ((PLUS|MINUS) term)*
+Order of priority: LOW to HIGH
 
-term : factor((MUL|DIV) factor)*
+expression  : term ((PLUS|MINUS) term)*
 
-factor  : INT|FLOAT
-				: (PLUS|MINUS) factor
-				: LPAREN expr RPAREN
+term        : factor((MUL|DIV) factor)*
+
+factor		: (PLUS|MINUS) factor
+
+power		: super (POW factor)*
+
+ultra		: INT|FLOAT
+			: LPAREN expr RPAREN
+
