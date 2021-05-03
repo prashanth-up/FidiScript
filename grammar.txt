@@ -1,6 +1,8 @@
 Order of priority: LOW to HIGH
 
-expression  : term ((PLUS|MINUS) term)*
+
+expr    : KEYWORD:VAR IDENTIFIER EQ expr
+		:	term ((PLUS|MINUS) term)*
 
 term        : factor((MUL|DIV) factor)*
 
@@ -8,6 +10,6 @@ factor		: (PLUS|MINUS) factor
 
 power		: super (POW factor)*
 
-ultra		: INT|FLOAT
+atom		: INT|FLOAT
 			: LPAREN expr RPAREN
 
