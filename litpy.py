@@ -3,12 +3,15 @@
 # ----------------------------------------
 
 from strings_with_arrows import *
+import string
 
 # ----------------------------------------
 # CONSTANTS
 # ----------------------------------------
 
 DIGITS = '0123456789'
+LETTERS = string.ascii_letters
+LETTERS_DIGITS = LETTERS + DIGITS
 
 # ----------------------------------------
 # ERROR CLASSES
@@ -99,13 +102,20 @@ class Position:
 
 TT_INT = 'INT'
 TT_FLOAT = 'FLOAT'
+
+TT_IDENTIFIER = 'INDENTIFIER'
+TT_KEYWORD = 'KEYWORD'
+
 TT_PLUS = 'PLUS'
 TT_MINUS = 'MINUS'
 TT_MUL = 'MUL'
 TT_DIV = 'DIV'
 TT_POW = 'POW'
+
+TT_EQ = 'EQ'
 TT_LPAREN = 'LPAREN'
 TT_RPAREN = 'RPAREN'
+
 TT_EOF = 'EOF'
 
 
@@ -153,6 +163,9 @@ class Lexer:
                 self.advance()
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
+            elif self.current_char in LETTERS:
+                tokens.append(self.make_identifier)
+
             elif self.current_char == '+':
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
@@ -168,6 +181,10 @@ class Lexer:
             elif self.current_char == '^':
                 tokens.append(Token(TT_POW, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == '=':
+                tokens.append(Token(TT_EQ, pos_start=self.pos))
+                self.advance()
+
             elif self.current_char == '(':
                 tokens.append(Token(TT_LPAREN, pos_start=self.pos))
                 self.advance()
@@ -202,6 +219,14 @@ class Lexer:
             return Token(TT_INT, int(num_str), pos_start, self.pos)
         else:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
+
+    def make_identifier(self):
+        id_str = ''
+        pos_start = self.pos.copy()
+
+        while self.current_char != None and self.current_char in LETTERS_DIGITS + '_':
+            id_str
+
 
 # ----------------------------------------
 # NODES
