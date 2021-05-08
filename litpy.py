@@ -2,7 +2,6 @@
 # ALL IMPORTS
 # ----------------------------------------
 
-# from strings_with_arrows import *
 import string
 
 # ----------------------------------------
