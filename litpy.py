@@ -73,14 +73,14 @@ class IllegalCharError(Error):
         super().__init__(pos_start, pos_end, 'Illegal Character', details)
 
 
-class InvalidSyntaxError(Error):
-    def __init__(self, pos_start, pos_end, details=''):
-        super().__init__(pos_start, pos_end, 'Invalid Syntax', details)
-
-
 class ExpectedCharError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Expected Character', details)
+
+
+class InvalidSyntaxError(Error):
+    def __init__(self, pos_start, pos_end, details=''):
+        super().__init__(pos_start, pos_end, 'Invalid Syntax', details)
 
 
 class RTError(Error):
@@ -108,9 +108,9 @@ class RTError(Error):
 
         return 'Traceback (most recent call last):\n' + result
 
-# ----------------------------------------
+# -------------------------------------------------
 # POSITION
-# ----------------------------------------
+# -------------------------------------------------
 
 
 class Position:
@@ -134,13 +134,14 @@ class Position:
     def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
 
-# -------------------------------------------
+# -------------------------------------------------
 # TOKENS
-# -------------------------------------------
+# -------------------------------------------------
 
 
 TT_INT = 'INT'
 TT_FLOAT = 'FLOAT'
+TT_STRING = 'STRING'
 TT_IDENTIFIER = 'IDENTIFIER'
 TT_KEYWORD = 'KEYWORD'
 
@@ -170,7 +171,7 @@ KEYWORDS = [
     'OR',
     'NOT',
     'IF',
-    'THEN',
+
     'ELIF',
     'ELSE',
     'FOR',
@@ -178,7 +179,7 @@ KEYWORDS = [
     'STEP',
     'WHILE',
     'FUN',
-    'THEN',
+    'THEN'
 ]
 
 
@@ -203,9 +204,9 @@ class Token:
             return f'{self.type}:{self.value}'
         return f'{self.type}'
 
-# -------------------------------------------
+# -------------------------------------------------
 # LEXER
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class Lexer:
@@ -231,6 +232,8 @@ class Lexer:
                 tokens.append(self.make_number())
             elif self.current_char in LETTERS:
                 tokens.append(self.make_identifier())
+            elif self.current_char == '"':
+                tokens.append(self.make_string())
             elif self.current_char == '+':
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
@@ -292,6 +295,32 @@ class Lexer:
             return Token(TT_INT, int(num_str), pos_start, self.pos)
         else:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
+
+    def make_string(self):
+        string = ''
+        pos_start = self.pos.copy()
+        escape_character = False
+        self.advance()
+
+        escape_characters = {
+            'n': '\n',
+            't': '\t'
+        }
+
+        while self.current_char != None and (self.current_char != '"' or escape_character):
+            if escape_character:
+                string += escape_characters.get(self.current_char,
+                                                self.current_char)
+            else:
+                if self.current_char == '\\':
+                    escape_character = True
+                else:
+                    string += self.current_char
+            self.advance()
+            escape_character = False
+
+        self.advance()
+        return Token(TT_STRING, string, pos_start, self.pos)
 
     def make_identifier(self):
         id_str = ''
@@ -359,12 +388,23 @@ class Lexer:
 
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
-# -------------------------------------------
+# -------------------------------------------------
 # NODES
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class NumberNode:
+    def __init__(self, tok):
+        self.tok = tok
+
+        self.pos_start = self.tok.pos_start
+        self.pos_end = self.tok.pos_end
+
+    def __repr__(self):
+        return f'{self.tok}'
+
+
+class StringNode:
     def __init__(self, tok):
         self.tok = tok
 
@@ -476,9 +516,9 @@ class CallNode:
         else:
             self.pos_end = self.node_to_call.pos_end
 
-# -------------------------------------------
+# -------------------------------------------------
 # PARSE RESULT
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class ParseResult:
@@ -508,9 +548,9 @@ class ParseResult:
             self.error = error
         return self
 
-# -------------------------------------------
+# -------------------------------------------------
 # PARSER
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class Parser:
@@ -673,6 +713,11 @@ class Parser:
             res.register_advancement()
             self.advance()
             return res.success(NumberNode(tok))
+
+        elif tok.type == TT_STRING:
+            res.register_advancement()
+            self.advance()
+            return res.success(StringNode(tok))
 
         elif tok.type == TT_IDENTIFIER:
             res.register_advancement()
@@ -894,6 +939,7 @@ class Parser:
 
     def func_def(self):
         res = ParseResult()
+
         if not self.current_tok.matches(TT_KEYWORD, 'FUN'):
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
@@ -998,9 +1044,9 @@ class Parser:
 
         return res.success(left)
 
-# -------------------------------------------
+# -------------------------------------------------
 # RUNTIME RESULT
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class RTResult:
@@ -1020,9 +1066,9 @@ class RTResult:
         self.error = error
         return self
 
-# -------------------------------------------
+# -------------------------------------------------
 # VALUES
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class Value:
@@ -1205,7 +1251,6 @@ class Number(Value):
     def __repr__(self):
         return str(self.value)
 
-
 class Function(Value):
     def __init__(self, name, body_node, arg_names):
         super().__init__()
@@ -1253,9 +1298,9 @@ class Function(Value):
     def __repr__(self):
         return f"<function {self.name}>"
 
-# -------------------------------------------
+# -------------------------------------------------
 # CONTEXT
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class Context:
@@ -1265,9 +1310,9 @@ class Context:
         self.parent_entry_pos = parent_entry_pos
         self.symbol_table = None
 
-# -------------------------------------------
+# -------------------------------------------------
 # SYMBOL TABLE
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class SymbolTable:
@@ -1287,9 +1332,9 @@ class SymbolTable:
     def remove(self, name):
         del self.symbols[name]
 
-# -------------------------------------------
+# -------------------------------------------------
 # INTERPRETER
-# -------------------------------------------
+# -------------------------------------------------
 
 
 class Interpreter:
@@ -1306,6 +1351,12 @@ class Interpreter:
     def visit_NumberNode(self, node, context):
         return RTResult().success(
             Number(node.tok.value).set_context(
+                context).set_pos(node.pos_start, node.pos_end)
+        )
+
+    def visit_StringNode(self, node, context):
+        return RTResult().success(
+            String(node.tok.value).set_context(
                 context).set_pos(node.pos_start, node.pos_end)
         )
 
@@ -1501,9 +1552,9 @@ class Interpreter:
             return res
         return res.success(return_value)
 
-# -------------------------------------------
+# -------------------------------------------------
 # RUN
-# -------------------------------------------
+# -------------------------------------------------
 
 
 global_symbol_table = SymbolTable()
