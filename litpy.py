@@ -1332,6 +1332,9 @@ Number.false = Number(0)
 Number.true = Number(1)
 Number.math_PI = Number(math.pi)
 
+Number.nice = Number(69420)
+Number.calc_bless = Number(55378008)
+
 
 class String(Value):
     def __init__(self, value):
