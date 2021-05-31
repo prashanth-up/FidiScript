@@ -1,4 +1,4 @@
-import litpy
+import fidiscript
 
 while True:
     text = input('litpy > ')
