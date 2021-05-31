@@ -1,8 +1,8 @@
 import fidiscript
 
 while True:
-    text = input('litpy > ')
-    result, error = litpy.run('<stdin>', text)
+    text = input('FidiScript> ')
+    result, error = fidiscript.run('<stdin>', text)
 
     if error:
         print(error.as_string())
